@@ -1,0 +1,25 @@
+#start with:  docker compose up -d
+version: '3'
+services:
+  mariadb:
+    image: mariadb:10.10
+    container_name: ramko-merge-db
+    environment:
+      MYSQL_DATABASE: ramkoinj
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database:/var/lib/mysql
+
+  mfgmerge:
+    build:
+      context: ./
+      dockerfile: Dockerfile  # Python
+    image: jennasys/ramko_mfgmerge/mfgmerge
+    container_name: mfgmerge
+    environment:
+      TZ: UTC
+    env_file:
+      - ./.env
