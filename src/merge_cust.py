@@ -103,7 +103,7 @@ def merge_customers():
 
 
     except Exception as e:
-        print(f"Error updating user mapping table: {e}")
+        print(f"Error updating cust mapping table: {e}")
         raise
     finally:
         if dbmfg and dbmfg.conn:
