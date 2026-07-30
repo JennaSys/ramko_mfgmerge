@@ -69,7 +69,11 @@ def match_existing_customers():
 def merge_customers():
     dbmfg = None
     dbinj = None
+    cust_id = None
     try:
+        # Reset prior run
+        dbutils.execute(f"UPDATE {tbl_name_map} SET inj_id=NULL WHERE do_merge = true AND inj_name IS NULL;")
+
         mfg_host = os.environ.get('DB_MFG_HOST')
         mfg_port = os.environ.get('DB_MFG_PORT')
         inj_host = os.environ.get('DB_INJ_HOST')
@@ -87,6 +91,8 @@ def merge_customers():
                 result = dbinj.execute(f"INSERT INTO ramkoinj.customer (name, active, lastActivity, oneYearActivity, address, rate, updated, notes, files, contacts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                                 (mfg_cust[0]['name'], mfg_cust[0]['active'], mfg_cust[0]['lastActivity'], mfg_cust[0]['oneYearActivity'], mfg_cust[0]['address'], mfg_cust[0]['rate'], mfg_cust[0]['updated'], mfg_cust[0]['notes'], mfg_cust[0]['files'], mfg_cust[0]['contacts']))
                 cust_id = result[1]['lastrowid']
+                dbutils.execute(f"UPDATE {tbl_name_map} SET inj_id=? WHERE id=?;", (cust_id, cust['id']))
+                print(f"Added inj customer {cust_id} for mfg customer {cust['id']}")
             else:
                 # use existing inj customer
                 cust_id = cust['inj_id']
@@ -104,6 +110,7 @@ def merge_customers():
 
     except Exception as e:
         print(f"Error updating cust mapping table: {e}")
+        print("cust_id:", cust_id)
         raise
     finally:
         if dbmfg and dbmfg.conn:
