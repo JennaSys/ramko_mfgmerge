@@ -111,7 +111,7 @@ def map_inj_jobs():
 
     try:
         inj_jobs = dbutils.select(f"SELECT * FROM {tbl_name_map} WHERE customerId = {INJ_CUST_ID};")
-        print(f"MFG Job, INJ PO, INJ Job")
+        # print(f"MFG Job, INJ PO, INJ Job")
         for job in inj_jobs[1]:
             po = get_inj_po(job['PONumber'])
             inj_job = get_inj_job(po, job['customerPartNo'])
@@ -128,7 +128,7 @@ def map_inj_jobs():
             else:
                 inj_pn = get_inj_pn(inj_job)
 
-            print(f"{job['Job_Number']}, {po}, {inj_job}")
+            # print(f"{job['Job_Number']}, {po}, {inj_job}")
 
             if inj_pn is not None:
                 dbutils.execute(f"UPDATE {tbl_name_map} SET inj_po=?, inj_job=?, inj_pn=? WHERE Job_Number=?;", (po, inj_job, inj_pn, job['Job_Number']))
@@ -154,6 +154,8 @@ def merge_jobs():
         dbmfg.connect(host=mfg_host, port=mfg_port)
         dbinj = RamkoDb()
         dbinj.connect(host=inj_host, port=inj_port)
+        print("\nMerging jobs...")
+        print(f"MFG Job, INJ Job, INJ PO, MFG Cust, INJ Cust")
         for job in jobs[1]:
             mfg_job = dbmfg.select("SELECT * FROM ramko.Jobs WHERE Job_Number = ?", (job['Job_Number'],) )
             if job['inj_job'] is None:
@@ -173,8 +175,11 @@ def merge_jobs():
                              mfg_job[0]['updated'], mfg_job[0]['created'], mfg_job[0]['labor'], mfg_job[0]['laborInclusive'], mfg_job[0]['material'],
                              mfg_job[0]['samples'], mfg_job[0]['files'], mfg_job[0]['activityLog'], mfg_job[0]['deleted'], mfg_job[0]['productionReady'], ))
             else:
-                # USe existing INJ Job
+                # Use existing INJ Job
+                cust_id = ''
                 job_id = job['inj_job']
+
+            print(f"{job['Job_Number']}, {job_id}, {'' if job['inj_po'] is None else job['inj_po']}, {job['customerId']}, {cust_id}")
 
             # Add T&M ME
             curr_date = datetime.now().strftime('%Y-%m-%d')
