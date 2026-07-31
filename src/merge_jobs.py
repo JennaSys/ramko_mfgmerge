@@ -67,8 +67,8 @@ def get_inj_job(po_number, pn):
         dbinj = RamkoDb()
         dbinj.connect(host=inj_host, port=inj_port)
         items = dbinj.select("SELECT job_id, inv, vendorPartId FROM ramkoinj.PoItem WHERE po_id=?", (po_number,))
-        result =  {item['job_id'] if item['job_id'] is not None else 'Inventory' if item['inv'] else None for item in items}
-        return list(result)[-1] if len(result) > 0 else 'Invalid PO'
+        result: set =  {item['job_id'] if item['job_id'] is not None else 'Inventory' if item['inv'] else None for item in items}
+        return sorted(result, key=str)[-1] if len(result) > 0 else 'Invalid PO'
 
     except Exception as e:
         print(f"Error retrieving mfg jobs into mapping table: {e}")
@@ -116,18 +116,32 @@ def map_inj_jobs():
             po = get_inj_po(job['PONumber'])
             inj_job = get_inj_job(po, job['customerPartNo'])
 
+            inj_pn = None
+            if inj_job == 'Inventory':
+                if job['Job_Number'] in [460170, 460360, 460361, 460365, 460383, 460402, 460442]:
+                    inj_job = 260102
+                    inj_pn = get_inj_pn(inj_job)
+            elif inj_job == 'Invalid PO':
+                if job['Job_Number'] in [460412]:
+                    inj_job = 262016
+                    inj_pn = get_inj_pn(inj_job)
+            else:
+                inj_pn = get_inj_pn(inj_job)
+
             print(f"{job['Job_Number']}, {po}, {inj_job}")
 
-            if inj_job not in ['Inventory', 'Invalid PO']:
-                inj_pn = get_inj_pn(inj_job)
+            if inj_pn is not None:
                 dbutils.execute(f"UPDATE {tbl_name_map} SET inj_po=?, inj_job=?, inj_pn=? WHERE Job_Number=?;", (po, inj_job, inj_pn, job['Job_Number']))
 
     except Exception as e:
-        print(f"Error updating vendor mapping table: {e}")
+        print(f"Error updating job mapping table: {e}")
         raise
 
 
 def merge_jobs():
+    MFG_VENDOR_ID = 366
+    USER_ID = 1058
+
     dbmfg = None
     dbinj = None
     try:
@@ -143,6 +157,8 @@ def merge_jobs():
         for job in jobs[1]:
             mfg_job = dbmfg.select("SELECT * FROM ramko.Jobs WHERE Job_Number = ?", (job['Job_Number'],) )
             if job['inj_job'] is None:
+                # Add MFG job to INJ DB
+                job_id = job['Job_Number']
                 cust_id = get_inj_cust_id(job['customerId'])
                 dbinj.execute(f"""INSERT INTO ramkoinj.Jobs (Job_Number, customerId, customerPartNo, quantity, Open_Date, Start_Date, Due_Date, Ship_Date,
                                         Job_Description, Active, Lead, PONumber, QuoteNo, TMValue, tooling, passThru, Terms, POReceived, DepositReceived,
@@ -156,6 +172,17 @@ def merge_jobs():
                              mfg_job[0]['shipToAddress'], mfg_job[0]['officeNotes'], mfg_job[0]['__FullTextSearch'], mfg_job[0]['__IdFixed'],
                              mfg_job[0]['updated'], mfg_job[0]['created'], mfg_job[0]['labor'], mfg_job[0]['laborInclusive'], mfg_job[0]['material'],
                              mfg_job[0]['samples'], mfg_job[0]['files'], mfg_job[0]['activityLog'], mfg_job[0]['deleted'], mfg_job[0]['productionReady'], ))
+            else:
+                # USe existing INJ Job
+                job_id = job['inj_job']
+
+            # Add T&M ME
+            curr_date = datetime.now().strftime('%Y-%m-%d')
+            amt = job['labor'] + job['material']
+            desc = f"T&M Merge from MFG job {job['Job_Number']} (labor: {job['labor']:.2f} / matl: {job['material']:.2f})"
+            dbinj.execute(
+                f"INSERT INTO ramkoinj.Material_Entry (jobId, vendorId, description, date, amount, dateEntered, source, createdBy_id, scrap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (job_id, MFG_VENDOR_ID, desc, curr_date, amt, f"{curr_date} 00:00:00", "Manual", USER_ID, False))
 
     except Exception as e:
         print(f"Error updating vendor mapping table: {e}")
@@ -163,35 +190,5 @@ def merge_jobs():
     finally:
         if dbmfg and dbmfg.conn:
             dbmfg.disconnect()
-        if dbinj and dbinj.conn:
-            dbinj.disconnect()
-
-
-
-def create_tm_mes():
-    MFG_VENDOR_ID = 366
-    USER_ID = 1058
-
-    dbinj = None
-    try:
-        inj_host = os.environ.get('DB_INJ_HOST')
-        inj_port = os.environ.get('DB_INJ_PORT')
-        jobs = dbutils.select(f"""SELECT MAX(Job_Number) AS mfg_job_id, IFNULL(inj_job, Job_Number) AS inj_job_id, customerId, SUM(labor) AS total_labor, SUM(material) AS total_material
-                                    FROM job_map WHERE do_merge=1 GROUP BY inj_job_id, customerId;""")
-        dbinj = RamkoDb()
-        dbinj.connect(host=inj_host, port=inj_port)
-        for job in jobs[1]:
-            # Add T&M ME
-            curr_date = datetime.now().strftime('%Y-%m-%d')
-            amt = job['total_labor'] + job['total_material']
-            dbinj.execute(
-                f"INSERT INTO ramkoinj.Material_Entry (jobId, vendorId, description, date, amount, dateEntered, source, createdBy_id, scrap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (job['inj_job_id'], MFG_VENDOR_ID, "T & M Merge", curr_date, amt, f"{curr_date} 00:00:00", "Manual", USER_ID,
-                 False))
-
-    except Exception as e:
-        print(f"Error updating user mapping table: {e}")
-        raise
-    finally:
         if dbinj and dbinj.conn:
             dbinj.disconnect()
