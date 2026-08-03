@@ -70,6 +70,7 @@ def merge_customers():
     dbmfg = None
     dbinj = None
     cust_id = None
+    print("\nMerging customers...")
     try:
         # Reset prior run
         dbutils.execute(f"UPDATE {tbl_name_map} SET inj_id=NULL WHERE do_merge = true AND inj_name IS NULL;")

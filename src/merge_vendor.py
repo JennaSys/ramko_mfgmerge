@@ -70,6 +70,7 @@ def match_existing_vendors():
 def merge_vendors():
     dbmfg = None
     dbinj = None
+    print("\nMerging vendors...")
     try:
         mfg_host = os.environ.get('DB_MFG_HOST')
         mfg_port = os.environ.get('DB_MFG_PORT')
@@ -83,9 +84,11 @@ def merge_vendors():
         for vendor in vendors[1]:
             mfg_vendor = dbmfg.select("SELECT * FROM ramko.vendor WHERE id = ?", (vendor['id'],) )
 
-            dbinj.execute(f"INSERT INTO ramkoinj.vendor (name, active, lastAudit, state, terms, notes, activityLog, contacts, locked, files, lastActivity, oneYearActivity, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            result = dbinj.execute(f"INSERT INTO ramkoinj.vendor (name, active, lastAudit, state, terms, notes, activityLog, contacts, locked, files, lastActivity, oneYearActivity, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                             (mfg_vendor[0]['name'], mfg_vendor[0]['active'], mfg_vendor[0]['lastAudit'], mfg_vendor[0]['state'], mfg_vendor[0]['terms'], mfg_vendor[0]['notes'], mfg_vendor[0]['activityLog'], mfg_vendor[0]['contacts'], mfg_vendor[0]['locked'], mfg_vendor[0]['files'], mfg_vendor[0]['lastActivity'], mfg_vendor[0]['oneYearActivity'], mfg_vendor[0]['updated']))
 
+            vendor_id = result[1]['lastrowid']
+            print(f"Added INJ vendor {vendor_id} from MFG {vendor['id']}")
     except Exception as e:
         print(f"Error updating vendor mapping table: {e}")
         raise

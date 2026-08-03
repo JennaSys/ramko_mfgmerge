@@ -260,6 +260,7 @@ def reassign_inj_id(db, inj_id):
 def merge_emps():
     dbmfg = None
     dbinj = None
+    print("\nMerging emps...")
     try:
         add_workCategories()
         wc_map = {}
