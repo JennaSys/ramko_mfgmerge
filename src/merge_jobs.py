@@ -31,8 +31,10 @@ def create_job_map_table():
 
     db = None
     try:
+        mfg_host = os.environ.get('DB_MFG_HOST')
+        mfg_port = os.environ.get('DB_MFG_PORT')
         db = RamkoDb()
-        db.connect()
+        db.connect(host=mfg_host, port=mfg_port)
         sql = f"""SELECT Job_Number, customerId, customerPartNo, PONumber, Active, labor, material
                     FROM ramko.Jobs j
                     WHERE j.Active=1

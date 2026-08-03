@@ -175,8 +175,10 @@ def create_workCategory_map():
 def add_workCategories():
     db = None
     try:
+        inj_host = os.environ.get('DB_INJ_HOST')
+        inj_port = os.environ.get('DB_INJ_PORT')
         db = RamkoDb()
-        db.connect()
+        db.connect(host=inj_host, port=inj_port)
         db.execute("DELETE FROM ramkoinj.workCategory WHERE id > 20;")
         sql = f"""INSERT INTO ramkoinj.workCategory (id, category, shop) 
                   VALUES (21, 'Engineering', 1),
@@ -276,7 +278,7 @@ def merge_emps():
         dbinj.connect(host=inj_host, port=inj_port)
         for emp in emps[1]:
             mfgemps = dbmfg.select("SELECT * FROM ramko.emp WHERE id = ?", (emp['id'],))
-            injemps = dbmfg.select("SELECT * FROM ramkoinj.emp WHERE id = ?", (emp['id'],))
+            injemps = dbinj.select("SELECT * FROM ramkoinj.emp WHERE id = ?", (emp['id'],))
             if len(injemps) > 0:
                 if injemps[0]['active'] == 0:
                     # move inj emp to new id and insert mfg emp as is
