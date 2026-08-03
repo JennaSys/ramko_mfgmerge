@@ -37,9 +37,9 @@ def setup_dev_env():
 
     os.environ['DB_FILE'] = os.path.join(DB_LOC, DB_NAME)
     os.environ['DB_MFG_HOST'] = "127.0.0.1"
-    os.environ['DB_MFG_PORT'] = "3306"
+    os.environ['DB_MFG_PORT'] = "3326"
     os.environ['DB_INJ_HOST'] = "127.0.0.1"
-    os.environ['DB_INJ_PORT'] = "3306"
+    os.environ['DB_INJ_PORT'] = "3316"
     os.environ['DB_PWD'] = config('MARIADB_ROOT_PASSWORD')
 
 

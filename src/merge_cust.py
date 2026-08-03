@@ -89,8 +89,8 @@ def merge_customers():
                 # New customer
                 mfg_cust = dbmfg.select("SELECT * FROM ramko.customer WHERE id = ?", (cust['id'],) )
 
-                result = dbinj.execute(f"INSERT INTO ramkoinj.customer (name, active, lastActivity, oneYearActivity, address, rate, updated, notes, files, contacts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                                (mfg_cust[0]['name'], mfg_cust[0]['active'], mfg_cust[0]['lastActivity'], mfg_cust[0]['oneYearActivity'], mfg_cust[0]['address'], mfg_cust[0]['rate'], mfg_cust[0]['updated'], mfg_cust[0]['notes'], mfg_cust[0]['files'], mfg_cust[0]['contacts']))
+                result = dbinj.execute(f"INSERT INTO ramkoinj.customer (name, active, state, lastActivity, oneYearActivity, address, rate, updated, notes, files, contacts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                (mfg_cust[0]['name'], mfg_cust[0]['active'], mfg_cust[0]['state'], mfg_cust[0]['lastActivity'], mfg_cust[0]['oneYearActivity'], mfg_cust[0]['address'], mfg_cust[0]['rate'], mfg_cust[0]['updated'], mfg_cust[0]['notes'], mfg_cust[0]['files'], mfg_cust[0]['contacts']))
                 cust_id = result[1]['lastrowid']
                 dbutils.execute(f"UPDATE {tbl_name_map} SET inj_id=? WHERE id=?;", (cust_id, cust['id']))
                 print(f"Added inj customer {cust_id} for mfg customer {cust['id']}")
