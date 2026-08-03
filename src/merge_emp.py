@@ -284,17 +284,17 @@ def merge_emps():
                     # move inj emp to new id and insert mfg emp as is
                     new_inj_id = reassign_inj_id(dbinj, injemps[0]['id'])
                     emp_id = emp['id']
-                    print(emp['id'], emp['id'], injemps[0]['id'], new_inj_id)
+                    print(f"{emp['id']}, {emp['id']}, {injemps[0]['id']}, {new_inj_id}")
                 else:
                     # insert mfg emp with new id and log it
                     newid = get_next_inj_empid(dbinj)
                     print(f"MFG emp id {emp['id']} is being used in INJ, moving to {newid}")
                     emp_id = newid
-                    print(emp['id'], newid, injemps[0]['id'], injemps[0]['id'])
+                    print(f"{emp['id']}, {newid}, {injemps[0]['id']}, {injemps[0]['id']}")
             else:
                 # insert mfg emp as is
                 emp_id = emp['id']
-                print(emp['id'], emp_id, '', ' ')
+                print(f"{emp['id']}, {emp_id}, {' '}, {' '}")
 
             print(f"Merging MFG emp id {emp['id']}")
             dbinj.execute(f"INSERT INTO ramkoinj.emp (id, lastName, firstName, dateOfBirth, street, city, state, zip, phone, wage, active, pin, allowPerm, allowAllJobs, workCategoryId, temp, __st, __ot, __dt, __stI, __otI, __dtI, supervisorEmpId, created, updated, user_id ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",

@@ -12,6 +12,7 @@ tbl_name_map = 'job_map'
 # add one T&M ME for each active jobname
 
 def create_job_map_table():
+    print("\nCreating jobs map table...")
     dbutils.execute(f"DROP TABLE IF EXISTS {tbl_name_map};")
     sql = f"""CREATE TABLE {tbl_name_map} (
      Job_Number INTEGER,
@@ -110,7 +111,7 @@ def get_inj_cust_id(cust_id):
 
 def map_inj_jobs():
     INJ_CUST_ID = 216
-
+    print("\nMepping jobs...")
     try:
         inj_jobs = dbutils.select(f"SELECT * FROM {tbl_name_map} WHERE customerId = {INJ_CUST_ID};")
         # print(f"MFG Job, INJ PO, INJ Job")
