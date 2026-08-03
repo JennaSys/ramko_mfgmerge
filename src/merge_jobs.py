@@ -158,7 +158,7 @@ def merge_jobs():
         dbinj = RamkoDb()
         dbinj.connect(host=inj_host, port=inj_port)
         print("\nMerging jobs...")
-        print(f"MFG Job, INJ Job, INJ PO, MFG Cust, INJ Cust")
+        print(f"MFG Job, INJ Job, INJ PO, MFG Cust, INJ Cust, T&M")
         for job in jobs[1]:
             mfg_job = dbmfg.select("SELECT * FROM ramko.Jobs WHERE Job_Number = ?", (job['Job_Number'],) )
             if job['inj_job'] is None:
@@ -182,7 +182,6 @@ def merge_jobs():
                 cust_id = ''
                 job_id = job['inj_job']
 
-            print(f"{job['Job_Number']}, {job_id}, {'' if job['inj_po'] is None else job['inj_po']}, {job['customerId']}, {cust_id}")
 
             # Add T&M ME
             curr_date = datetime.now().strftime('%Y-%m-%d')
@@ -192,6 +191,7 @@ def merge_jobs():
                 f"INSERT INTO ramkoinj.Material_Entry (jobId, vendorId, description, date, amount, dateEntered, source, createdBy_id, scrap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (job_id, MFG_VENDOR_ID, desc, curr_date, amt, f"{curr_date} 00:00:00", "Manual", USER_ID, False))
 
+            print(f"{job['Job_Number']}, {job_id}, {'' if job['inj_po'] is None else job['inj_po']}, {job['customerId']}, {cust_id}, {amt}")
     except Exception as e:
         print(f"Error updating vendor mapping table: {e}")
         raise
