@@ -368,3 +368,32 @@ def update_emp_super():
             dbinj.disconnect()
 
 
+def reassign_emp():
+    INJ_EMP = 566
+
+    dbinj = None
+    try:
+        inj_host = os.environ.get('DB_INJ_HOST')
+        inj_port = os.environ.get('DB_INJ_PORT')
+        dbinj = RamkoDb()
+        dbinj.connect(host=inj_host, port=inj_port)
+
+        new_inj_id = reassign_inj_id(dbinj, INJ_EMP)
+        print(f"INJ emp {INJ_EMP} reassigned ID {new_inj_id}")
+    except Exception as e:
+        print(f"Error reassigning inj emp: {e}")
+        raise
+    finally:
+        if dbinj and dbinj.conn:
+            dbinj.disconnect()
+
+
+if __name__ == '__main__':
+    import os
+    from decouple import config
+
+    os.environ['DB_INJ_HOST'] = "127.0.0.1"
+    os.environ['DB_INJ_PORT'] = "3316"
+    os.environ['DB_PWD'] = config('MARIADB_ROOT_PASSWORD')
+
+    # reassign_emp()
