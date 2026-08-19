@@ -2,7 +2,7 @@ from decouple import config
 
 from merge_user import make_user_map_table, merge_users
 from src import merge_user
-from src.fix_mes import fix_inj_jobs, fix_perm_jobs, create_me_map_table, get_perm_job_amt, update_job_amt
+from src.fix_mes import fix_perm_jobs, create_me_map_table, get_perm_job_amt, update_job_amt, fix_inj_no_me_jobs
 from src.merge_cust import create_cust_map_table, match_existing_customers, merge_customers
 from src.merge_emp import make_emp_map_table, merge_emps, update_user_emp, update_emp_super
 from src.merge_jobs import create_job_map_table, map_inj_jobs, merge_jobs
@@ -30,10 +30,10 @@ def main():
     # map_inj_jobs()
     # merge_jobs()
 
-    create_me_map_table()
-    get_perm_job_amt()
-    update_job_amt()
-    # fix_inj_jobs()
+    # create_me_map_table()
+    # get_perm_job_amt()
+    # update_job_amt()
+    fix_inj_no_me_jobs()
     # fix_perm_jobs()
 
 def setup_dev_env():

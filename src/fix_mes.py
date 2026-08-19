@@ -204,9 +204,29 @@ WHERE j.Job_Number = ?;""", (job['mfg_job'],))
 
 
 
-def fix_inj_jobs():
+def fix_inj_no_me_jobs():
+    dbinj = None
+    try:
+        inj_host = os.environ.get('DB_INJ_HOST')
+        inj_port = os.environ.get('DB_INJ_PORT')
+        dbinj = RamkoDb()
+        dbinj.connect(host=inj_host, port=inj_port)
+        mes = dbutils.select(f"SELECT * FROM {tbl_name_map} WHERE cust_id = 216 AND me_count=0 ORDER BY id;")
+        print(f"me_id. inj_job, mfg_job, amount")
+        for me in mes[1]:
+            amt = float(f"{me['new_amt']:.2f}")
+            labor = f"{me['mfg_labor']:.2f}"
+            matl = f"{me['mfg_material']:.2f}"
+            print(f"{me['id']}, {me['inj_job']}, {me['mfg_job']}, {amt}")
+            sql = f"""UPDATE ramkoinj.Material_Entry SET qty=?, rate=?, amount=?, description=? WHERE id=?;"""
+            dbinj.execute(sql, (1, amt, amt, f"T&M Merge from MFG job {me['mfg_job']} (labor: {labor} / matl: {matl})", me['id']))
 
-    ...
+    except Exception as e:
+        print(f"Error updating inj mes from mapping table: {e}")
+        raise
+    finally:
+        if dbinj and dbinj.conn:
+            dbinj.disconnect()
 
 
 def fix_perm_jobs():
